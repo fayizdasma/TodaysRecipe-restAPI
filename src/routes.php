@@ -15,6 +15,7 @@ return function (App $app) {
         return $container->get('renderer')->render($response, 'index.phtml', $args);
     });
 
+    //get list of all recipes
 	$app->get('/recipes', function ($request, $response, $args) {
 	    $sth = $this->db->prepare("SELECT * FROM ingredients_recipes_table");
 	    $sth->execute();
@@ -22,23 +23,11 @@ return function (App $app) {
 	    return $this->response->withJson($recipes);
 	});
 
-      // search for recipe
-    $app->get('/search?ingredients=[{ingredients}]', function ($request, $response, $args) {
-        $sth = $this->db->prepare("SELECT r.recipe_id
-                FROM recipe_table AS r
-                INNER JOIN recipe_table AS ri ON r.recipe_id = ri.recipe_id
-                INNER JOIN ingredients_table AS i ON i.id = ri.ingredient_id
-                WHERE i.id IN (2,3)
-                GROUP BY r.recipe_id");
-        $sth->execute();
-        $search = $sth->fetchAll();
-        return $this->response->withJson(['status' => 1, 'error' => null,'data' => $search]);
-    });
-
-     // post search
+    //post search by passing ingredient names
     $app->post('/search', function ($request, $response) {
         $input = $request->getParsedBody();
         $ingredients_list = $input['ingredients'];
+        $isExactSearch = $input['exactSearch'];
         $ingredients_id_array = array();
         // find the ingredient id
         foreach($ingredients_list as $item_name) {
